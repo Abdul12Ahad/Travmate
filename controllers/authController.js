@@ -12,8 +12,7 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: 'Email is already registered' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ fullName, email, password: hashedPassword });  // Saving fullName
+        const newUser = new User({ fullName, email, password});  // Saving fullName
         await newUser.save();
 
         res.status(201).json({ message: 'User registered successfully' });
@@ -36,6 +35,7 @@ const loginUser = async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            console.log("Password incorrect");
             return res.status(400).json({ error: 'Invalid email or password' });
         }
 
