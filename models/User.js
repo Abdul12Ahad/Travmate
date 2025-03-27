@@ -3,8 +3,8 @@ const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
     fullName: String,
-    email: { type: String, unique: true },
-    password: String
+    email: { type: String, unique: true, required: true },
+    password: { type: String, required: true }
 });
 
 UserSchema.pre('save', async function(next) {
@@ -12,5 +12,6 @@ UserSchema.pre('save', async function(next) {
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
+
 
 module.exports = mongoose.model('User', UserSchema);

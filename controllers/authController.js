@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
 // Registering a new user
@@ -12,19 +13,18 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: 'Email is already registered' });
         }
 
-        const newUser = new User({ fullName, email, password});  // Saving fullName
+        const newUser = new User({ fullName, email, password });
         await newUser.save();
 
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
+        console.error("Registration Error:", error);
         res.status(500).json({ error: 'Server error' });
     }
 };
 
 
 // Login user
-const jwt = require('jsonwebtoken');
-
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -33,9 +33,14 @@ const loginUser = async (req, res) => {
             return res.status(400).json({ error: 'Invalid email or password' });
         }
 
+        console.log("User Found:", user); // Debugging log
+
         const isMatch = await bcrypt.compare(password, user.password);
+        console.log("Entered Password:", password); 
+        console.log("Stored Hashed Password:", user.password); 
+        console.log("Password Match Status:", isMatch); 
+
         if (!isMatch) {
-            console.log("Password incorrect");
             return res.status(400).json({ error: 'Invalid email or password' });
         }
 
@@ -43,10 +48,10 @@ const loginUser = async (req, res) => {
 
         res.status(200).json({ message: 'Login successful', token });
     } catch (error) {
+        console.error("Login Error:", error);
         res.status(500).json({ error: 'Server error' });
     }
 };
-
 
 
 // Forgot password
@@ -59,7 +64,6 @@ const forgotPassword = async (req, res) => {
             return res.status(400).json({ error: 'Email not found' });
         }
 
-        // Create a password reset token here 
         const resetToken = 'dummy-token'; 
 
         const transporter = nodemailer.createTransport({
