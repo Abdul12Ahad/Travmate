@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="design.css" />
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet' />
-  <title>Document</title>
+  <title>Login | TravMate</title>
 </head>
 <body>
   <header class="header">
@@ -22,6 +22,7 @@
       <button type="submit"><i class='bx bx-search-alt'></i></button>
     </form>
   </header>
+
   <div class="container">
     <div class="content">
       <h2 class="tittle"><i class='bx bx-trip'></i>Plan My Trip</h2>
@@ -42,16 +43,17 @@
         </div>
       </div>
     </div>
+
     <div class="box">
       <div class="signin">
         <form id="login-form" method="POST" onsubmit="return handleLogin(event)">
           <h2>Login</h2>
           <div class="inputbox">
-            <input type="email" name="email" placeholder="Email" required />
+            <input type="email" id="email" name="email" placeholder="Email" required />
             <span class="icon"><i class='bx bxl-gmail'></i></span>
           </div>
           <div class="inputbox">
-            <input type="password" name="password" placeholder="Password" required />
+            <input type="password" id="password" name="password" placeholder="Password" required />
             <span class="icon"><i class='bx bxs-lock-alt'></i></span>
           </div>
           <div class="forgetpassword">
@@ -67,29 +69,52 @@
       </div>
     </div>
   </div>
- 
-  <script>
-    async function handleLogin(event) {
-    event.preventDefault(); 
-    const email = document.querySelector('#login-form input[type="email"]').value;
-    const password = document.querySelector('#login-form input[type="password"]').value;
 
-    const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+  <script>
+    // Check if the user is already logged in
+    window.onload = function() {
+      const token = localStorage.getItem('token');
+      if (token) {
+        window.location.href = '/dashboard.html'; // Redirect to dashboard if already logged in
+      }
+    };
+
+    // Handle login form submission
+    async function handleLogin(event) {
+  event.preventDefault(); // Prevent form from submitting and reloading the page
+
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
     });
 
-    const data = await response.json();
-    if (response.ok) {
-        localStorage.setItem('authToken', data.token);
-        window.location.href = 'dashboard.html';  
-    } else {
-        alert(data.error || 'Login failed');
+    if (!res.ok) {
+      const errorData = await res.json(); // Read the error response
+      alert(errorData.error || 'Login failed');
+      return;
     }
+
+    const data = await res.json(); // Read the success response
+    // Store the JWT token in localStorage
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('refreshToken', data.refreshToken); // Store refresh token if available
+    console.log('Login successful:', data.token); // Debugging
+
+    // Redirect to dashboard after successful login
+    window.location.href = '/dashboard.html';
+  } catch (err) {
+    console.error(err);
+    alert('An error occurred during login');
+  }
 }
+
   </script>
 </body>
 </html>

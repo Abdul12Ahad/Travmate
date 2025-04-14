@@ -1,11 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Travel Planner Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: linear-gradient(to right, #89f7fe, #66a6ff); color: #333; }
+    header.hero { background: url('https://source.unsplash.com/1600x600/?travel') no-repeat center center/cover; height: 300px; display: flex; justify-content: center; align-items: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); }
+    header.hero h1 { font-size: 2.5rem; }
+    .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: rgba(255, 255, 255, 0.9); border-radius: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .logout-btn { background: #ff6b6b; border: none; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+    .form-section { margin-bottom: 40px; }
+    .form-section form { display: flex; gap: 20px; flex-wrap: wrap; }
+    input[type="text"], input[type="number"] { padding: 10px; border-radius: 8px; border: 1px solid #ccc; flex: 1 1 45%; }
+    button[type="submit"] { background: #0984e3; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+    .section-title { margin-bottom: 10px; font-size: 1.5rem; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+    .card-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+    .card { background: white; border-radius: 15px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px; transition: transform 0.3s ease; }
+    .card:hover { transform: translateY(-5px); }
+    .card i { font-size: 2rem; margin-bottom: 10px; color: #0984e3; }
+  </style>
 </head>
 <body>
-    <h1>welcome to the new page</h1>
+  <header class="hero">
+    <h1>Plan Your Next Adventure</h1>
+  </header>
+  <div class="container">
+    <div class="top-bar">
+      <h2>Welcome, <span id="userName">Traveler</span></h2>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    <div class="form-section">
+      <h3 class="section-title">Start Planning</h3>
+      <form id="travelForm">
+        <input type="text" id="destinationInput" placeholder="Enter Destination" required />
+        <input type="number" id="budget" placeholder="Enter Budget ($)" required />
+        <button type="submit">Get Suggestions</button>
+      </form>
+    </div>
+    <div class="recommendations">
+      <h3 class="section-title">Destination Info</h3>
+      <div class="card-list" id="recommendationsList"></div>
+    </div>
+  </div>
+  <script>
+    const destinationInput = document.getElementById("destinationInput");
+    const budgetInput = document.getElementById("budget");
+    const recommendationsList = document.getElementById("recommendationsList");
+  
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      window.location.href = 'userLogin.html';
+    }
+  
+    function isTokenExpired(token) {
+      if (!token) return true;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    }
+  
+    async function refreshAccessToken() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        console.error('No refresh token found');
+        return;
+      }
+      try {
+        const response = await fetch('/api/refresh', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+  
+        if (!response.ok) {
+          throw new Error(`Failed to refresh token: ${response.statusText}`);
+        }
+  
+        const data = await response.json();
+        return data.token;
+      } catch (error) {
+        console.error('Error refreshing token:', error);
+        alert('Failed to refresh token. Please log in again.');
+        logout();
+      }
+    }
+  
+    async function fetchWikipediaSummary(placeName) {
+      try {
+        const response = await fetch(`/api/destinations/wikipedia/${placeName}`);
+        const data = await response.json();
+  
+        if (data.extract) {
+          return data.extract;
+        } else {
+          return "No summary available for this destination.";
+        }
+      } catch (err) {
+        console.error("Error fetching Wikipedia data:", err);
+        return "Error fetching Wikipedia data.";
+      }
+    }
+  
+    async function fetchCurrencyConversion(amount) {
+      return parseFloat(amount) * 0.85; // Simulated USD to EUR conversion
+    }
+  
+    async function submitTravelForm(event) {
+  event.preventDefault();
+  const place = destinationInput.value;
+  const budget = budgetInput.value;
+
+  let token = localStorage.getItem('token');
+  const refreshToken = localStorage.getItem('refreshToken');
+
+  if (isTokenExpired(token)) {
+    token = await refreshAccessToken(refreshToken);
+    if (!token) return;
+  }
+
+  try {
+    const summary = await fetchWikipediaSummary(place.split(',')[0]);
+    const trimmedSummary = summary.split(" ").slice(0, 100).join(" ") + "...";
+    const convertedBudget = await fetchCurrencyConversion(budget);
+
+    recommendationsList.innerHTML = `
+      <div class="card">
+        <i class="fas fa-map-marked-alt"></i>
+        <h4>${place}</h4>
+        <p>${trimmedSummary}</p>
+      </div>
+      <div class="card">
+        <i class="fas fa-euro-sign"></i>
+        <h4>Converted Budget</h4>
+        <p>€${convertedBudget}</p>
+      </div>
+    `;
+  } catch (err) {
+    console.error("Error fetching travel info:", err);
+    recommendationsList.innerHTML = `<p>Failed to load destination data.</p>`;
+  }
+}
+  
+    document.getElementById("travelForm").addEventListener("submit", submitTravelForm);
+  </script>
+  
 </body>
 </html>
