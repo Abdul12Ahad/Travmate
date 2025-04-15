@@ -22,12 +22,13 @@
       <button type="submit"><i class='bx bx-search-alt'></i></button>
     </form>
   </header>
+
   <div class="container">
     <div class="content">
       <h2 class="tittle"><i class='bx bx-user-plus'></i> Register Account</h2>
       <div class="text">
         <h2>Join us now! <span><br />Register to start your journey...</span></h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Impedit, necessitatibus?</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
         <div class="socialmedia">
           <a href="#"><i class='bx bxl-linkedin'></i></a>
           <a href="#"><i class='bx bxl-facebook'></i></a>
@@ -36,6 +37,7 @@
         </div>
       </div>
     </div>
+
     <div class="box">
       <div class="register-box">
         <form id="register-form" method="POST" onsubmit="return handleRegister(event)">
@@ -69,33 +71,37 @@
 
   <script>
     async function handleRegister(event) {
-    event.preventDefault(); // Prevent the default form submission
-    const fullName = document.getElementById('FullName').value;
-    const email = document.getElementById('Email').value;
-    const password = document.getElementById('Password').value;
-    const confirmPassword = document.getElementById('confirmpw').value;
+      event.preventDefault();
+      const fullName = document.getElementById("FullName").value;
+      const email = document.getElementById("Email").value;
+      const password = document.getElementById("Password").value;
+      const confirmPassword = document.getElementById("confirmpw").value;
 
-    if (password !== confirmPassword) {
+      if (password !== confirmPassword) {
         alert("Passwords do not match!");
         return;
+      }
+
+      try {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fullName, email, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("refreshToken", data.refreshToken);
+          window.location.href = "dashboard.html";
+        } else {
+          alert(data.error || "Registration failed");
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
     }
-
-    const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fullName, email, password }),
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-        window.location.href = 'dashboard.html';  
-    } else {
-        alert(data.error || 'An error occurred during registration'); 
-    }
-}
-
   </script>
 </body>
 </html>

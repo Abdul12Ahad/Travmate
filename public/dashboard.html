@@ -8,7 +8,9 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background: linear-gradient(to right, #89f7fe, #66a6ff); color: #333; }
+
     header.hero { background: url('https://source.unsplash.com/1600x600/?travel') no-repeat center center/cover; height: 300px; display: flex; justify-content: center; align-items: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); }
+
     header.hero h1 { font-size: 2.5rem; }
     .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: rgba(255, 255, 255, 0.9); border-radius: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
     .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
@@ -46,86 +48,73 @@
       <div class="card-list" id="recommendationsList"></div>
     </div>
   </div>
+
   <script>
-    const destinationInput = document.getElementById("destinationInput");
-    const budgetInput = document.getElementById("budget");
-    const recommendationsList = document.getElementById("recommendationsList");
-  
-    function logout() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      window.location.href = 'userLogin.html';
-    }
-  
-    function isTokenExpired(token) {
-      if (!token) return true;
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 < Date.now();
-    }
-  
-    async function refreshAccessToken() {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        console.error('No refresh token found');
-        return;
-      }
-      try {
-        const response = await fetch('/api/refresh', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refreshToken }),
-        });
-  
-        if (!response.ok) {
-          throw new Error(`Failed to refresh token: ${response.statusText}`);
-        }
-  
-        const data = await response.json();
-        return data.token;
-      } catch (error) {
-        console.error('Error refreshing token:', error);
-        alert('Failed to refresh token. Please log in again.');
-        logout();
-      }
-    }
-  
-    async function fetchWikipediaSummary(placeName) {
-      try {
-        const response = await fetch(`/api/destinations/wikipedia/${placeName}`);
-        const data = await response.json();
-  
-        if (data.extract) {
-          return data.extract;
-        } else {
-          return "No summary available for this destination.";
-        }
-      } catch (err) {
-        console.error("Error fetching Wikipedia data:", err);
-        return "Error fetching Wikipedia data.";
-      }
-    }
-  
-    async function fetchCurrencyConversion(amount) {
-      return parseFloat(amount) * 0.85; // Simulated USD to EUR conversion
-    }
-  
-    async function submitTravelForm(event) {
-  event.preventDefault();
-  const place = destinationInput.value;
-  const budget = budgetInput.value;
+  const destinationInput = document.getElementById("destinationInput");
+  const budgetInput = document.getElementById("budget");
+  const recommendationsList = document.getElementById("recommendationsList");
 
-  let token = localStorage.getItem('token');
-  const refreshToken = localStorage.getItem('refreshToken');
-
-  if (isTokenExpired(token)) {
-    token = await refreshAccessToken(refreshToken);
-    if (!token) return;
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    window.location.href = 'userLogin.html';
   }
 
-  try {
-    const summary = await fetchWikipediaSummary(place.split(',')[0]);
+  function isTokenExpired(token) {
+    if (!token) return true;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  }
+
+  async function refreshAccessToken(refreshToken) {
+    try {
+      const response = await fetch('/api/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.token) {
+        localStorage.setItem("token", data.token);
+        return data.token;
+      } else {
+        throw new Error("Refresh failed");
+      }
+    } catch (error) {
+      console.error("Token refresh error:", error);
+      logout();
+    }
+  }
+
+  async function fetchWikipediaSummary(placeName) {
+    try {
+      const response = await fetch(`/api/destinations/wikipedia/${placeName}`);
+      const data = await response.json();
+      return data.extract || "No summary available.";
+    } catch (error) {
+      return "Error fetching summary.";
+    }
+  }
+
+  async function fetchCurrencyConversion(amount) {
+    return parseFloat(amount) * 0.85; // Simulated USD to EUR
+  }
+
+  async function submitTravelForm(event) {
+    event.preventDefault();
+    const place = destinationInput.value;
+    const budget = budgetInput.value;
+
+    let token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    if (isTokenExpired(token)) {
+      token = await refreshAccessToken(refreshToken);
+      if (!token) return;
+    }
+
+    const summary = await fetchWikipediaSummary(place);
     const trimmedSummary = summary.split(" ").slice(0, 100).join(" ") + "...";
     const convertedBudget = await fetchCurrencyConversion(budget);
 
@@ -137,18 +126,20 @@
       </div>
       <div class="card">
         <i class="fas fa-euro-sign"></i>
-        <h4>Converted Budget</h4>
-        <p>€${convertedBudget}</p>
-      </div>
-    `;
-  } catch (err) {
-    console.error("Error fetching travel info:", err);
-    recommendationsList.innerHTML = `<p>Failed to load destination data.</p>`;
+        <h4>Estimated Budget</h4>
+        <p>${convertedBudget.toFixed(2)} EUR</p>
+      </div>`;
   }
-}
-  
-    document.getElementById("travelForm").addEventListener("submit", submitTravelForm);
-  </script>
+
+  document.getElementById("travelForm").addEventListener("submit", submitTravelForm);
+
+  // Load username from token
+  const token = localStorage.getItem("token");
+  if (token) {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    document.getElementById("userName").textContent = payload.fullName || "Traveler";
+  }
+</script>
   
 </body>
 </html>

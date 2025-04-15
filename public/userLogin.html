@@ -26,20 +26,18 @@
   <div class="container">
     <div class="content">
       <h2 class="tittle"><i class='bx bx-trip'></i>Plan My Trip</h2>
-      <br />
       <div class="text">
         <h2>
           Welcome!<span><br />to our Website TravMate...</span>
         </h2>
-        <br />
         <p>
-          "Welcome to our travel hub, your gateway to unforgettable adventures! Whether you're seeking hidden gems or famous destinations, we provide curated guides and expert tips to help you plan your perfect journey. Explore vibrant cities, breathtaking landscapes, and get inspired for your next trip!"
+          "Welcome to our travel hub, your gateway to unforgettable adventures! Whether you're seeking hidden gems or famous destinations, we provide curated guides and expert tips to help you plan your perfect journey."
         </p>
         <div class="socialmedia">
-          <a href=""><i class='bx bxl-linkedin'></i></a>
-          <a href=""><i class='bx bxl-facebook'></i></a>
-          <a href=""><i class='bx bxl-instagram'></i></a>
-          <a href=""><i class='bx bxl-whatsapp'></i></a>
+          <a href="#"><i class='bx bxl-linkedin'></i></a>
+          <a href="#"><i class='bx bxl-facebook'></i></a>
+          <a href="#"><i class='bx bxl-instagram'></i></a>
+          <a href="#"><i class='bx bxl-whatsapp'></i></a>
         </div>
       </div>
     </div>
@@ -49,11 +47,11 @@
         <form id="login-form" method="POST" onsubmit="return handleLogin(event)">
           <h2>Login</h2>
           <div class="inputbox">
-            <input type="email" id="email" name="email" placeholder="Email" required />
+            <input type="email" id="Email" name="email" placeholder="Email" required />
             <span class="icon"><i class='bx bxl-gmail'></i></span>
           </div>
           <div class="inputbox">
-            <input type="password" id="password" name="password" placeholder="Password" required />
+            <input type="password" id="Password" name="password" placeholder="Password" required />
             <span class="icon"><i class='bx bxs-lock-alt'></i></span>
           </div>
           <div class="forgetpassword">
@@ -71,50 +69,38 @@
   </div>
 
   <script>
-    // Check if the user is already logged in
     window.onload = function() {
       const token = localStorage.getItem('token');
       if (token) {
-        window.location.href = '/dashboard.html'; // Redirect to dashboard if already logged in
+        window.location.href = '/dashboard.html';
       }
     };
 
-    // Handle login form submission
     async function handleLogin(event) {
-  event.preventDefault(); // Prevent form from submitting and reloading the page
+      event.preventDefault();
+      const email = document.getElementById("Email").value;
+      const password = document.getElementById("Password").value;
 
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
 
-  try {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
+        const data = await response.json();
 
-    if (!res.ok) {
-      const errorData = await res.json(); // Read the error response
-      alert(errorData.error || 'Login failed');
-      return;
+        if (response.ok) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("refreshToken", data.refreshToken);
+          window.location.href = "dashboard.html";
+        } else {
+          alert(data.error || "Invalid login credentials");
+        }
+      } catch (err) {
+        alert("Login failed: " + err.message);
+      }
     }
-
-    const data = await res.json(); // Read the success response
-    // Store the JWT token in localStorage
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('refreshToken', data.refreshToken); // Store refresh token if available
-    console.log('Login successful:', data.token); // Debugging
-
-    // Redirect to dashboard after successful login
-    window.location.href = '/dashboard.html';
-  } catch (err) {
-    console.error(err);
-    alert('An error occurred during login');
-  }
-}
-
   </script>
 </body>
 </html>
