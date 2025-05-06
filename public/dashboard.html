@@ -1,3 +1,4 @@
+<!-- FINAL DASHBOARD.HTML -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +7,7 @@
   <title>Travel Planner Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
   <style>
-    * {
+           * {
       margin: 0; padding: 0; box-sizing: border-box;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
@@ -129,6 +130,7 @@
     button[type="submit"] {
       background: #0984e3;
       color: white;
+      margin-left: 400px;
       padding: 10px 20px;
       border: none;
       border-radius: 8px;
@@ -214,8 +216,7 @@
     .delete-btn {
       background-color: #d63031;
       color: white;
-    }
-  </style>
+    }  </style> 
 </head>
 <body>
   <header class="hero">
@@ -228,7 +229,6 @@
     <div class="top-bar">
       <h2>Welcome, <span id="userName">Traveler</span></h2>
       <div class="actions">
-        <button class="saved-trips-btn" onclick="window.location.href='savedTrips.html'">Saved Trips</button>
         <button class="logout-btn" onclick="logout()">Logout</button>
         <button class="dark-mode-toggle" onclick="toggleDarkMode()">
           <i class="fas fa-moon"></i>
@@ -240,15 +240,19 @@
       <h3 class="section-title">Start Planning</h3>
       <form id="travelForm">
         <input type="text" id="destinationInput" placeholder="Enter Destination" required />
-        <input type="number" id="budget" placeholder="Enter Budget ($)" required />
-        <select id="currencySelector">
-          <option value="EUR">EUR</option>
-          <option value="GBP">GBP</option>
-          <option value="AUD">AUD</option>
-          <option value="CAD">CAD</option>
-          <option value="JPY">JPY</option>
-          <option value="INR">INR</option>
-        </select>
+        <div style="flex: 1 1 45%; display: flex; gap: 10px;">
+          <input type="number" id="budget" placeholder="Enter Budget" required style="flex: 2;" />
+          <select id="currencySelector" style="flex: 1;">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="AUD">AUD</option>
+            <option value="CAD">CAD</option>
+            <option value="JPY">JPY</option>
+            <option value="INR">INR</option>
+          </select>
+        </div>
+        
         <button type="submit">Get Suggestions</button>
       </form>
     </div>
@@ -261,11 +265,6 @@
     <div class="checkout-btn">
       <button onclick="goToBudgetPage()">Check Out Budget</button>
     </div>
-
-    <div class="saved-trips">
-      <h3 class="section-title">Saved Trips</h3>
-      <div class="card-list" id="savedTripsList"></div>
-    </div>
   </div>
 
 <script>
@@ -273,7 +272,6 @@
   const budgetInput = document.getElementById("budget");
   const recommendationsList = document.getElementById("recommendationsList");
   const currencySelector = document.getElementById("currencySelector");
-  const savedTripsList = document.getElementById("savedTripsList");
 
   function logout() {
     localStorage.removeItem('token');
@@ -283,7 +281,15 @@
 
   function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
   }
+
+  function loadDarkMode() {
+    const enabled = localStorage.getItem('darkMode') === 'true';
+    if (enabled) document.body.classList.add('dark-mode');
+  }
+
+  loadDarkMode();
 
   function isTokenExpired(token) {
     if (!token) return true;
@@ -338,22 +344,6 @@
       return;
     }
     window.location.href = `budget.html?destination=${encodeURIComponent(destination)}&budget=${encodeURIComponent(budget)}&currency=${currencySelector.value}`;
-  }
-
-  function renderSavedTrips(trips = []) {
-    savedTripsList.innerHTML = "";
-    trips.forEach((trip) => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <i class="fas fa-suitcase-rolling"></i>
-        <h4>${trip.destination}</h4>
-        <p>Budget: ${trip.budget} ${trip.currency}</p>
-        <div class="trip-actions">
-          <button class="view-btn" onclick="location.href='budget.html?destination=${encodeURIComponent(trip.destination)}&budget=${trip.budget}&currency=${trip.currency}'">View</button>
-        </div>`;
-      savedTripsList.appendChild(card);
-    });
   }
 
   async function submitTravelForm(event) {

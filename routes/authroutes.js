@@ -7,7 +7,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 // Helpers
 const generateAccessToken = (user) => {
-  return jwt.sign({ userId: user._id, name: user.fullName }, process.env.JWT_SECRET, {
+  return jwt.sign({ userId: user._id, name: user.fullName }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: '15m',
   });
 };

@@ -23,22 +23,17 @@ const registerUser = async (req, res) => {
     }
 };
 
-
 // Login user
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
+
     try {
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(400).json({ error: 'Invalid email or password' });
         }
 
-        console.log("User Found:", user); // Debugging log
-
         const isMatch = await bcrypt.compare(password, user.password);
-        console.log("Entered Password:", password); 
-        console.log("Stored Hashed Password:", user.password); 
-        console.log("Password Match Status:", isMatch); 
 
         if (!isMatch) {
             return res.status(400).json({ error: 'Invalid email or password' });
@@ -53,7 +48,6 @@ const loginUser = async (req, res) => {
     }
 };
 
-
 // Forgot password
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
@@ -64,7 +58,7 @@ const forgotPassword = async (req, res) => {
             return res.status(400).json({ error: 'Email not found' });
         }
 
-        const resetToken = 'dummy-token'; 
+        const resetToken = 'dummy-token'; // Placeholder, implement real reset token logic here
 
         const transporter = nodemailer.createTransport({
             service: 'gmail',

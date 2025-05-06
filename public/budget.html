@@ -19,70 +19,24 @@
       color: #333;
     }
 
-    body.dark {
-      background: #1e272e;
-      color: #d2dae2;
-    }
-
     .container {
       max-width: 800px;
-      margin: 40px auto;
+      margin: 50px auto;
       background: #fff;
-      padding: 30px;
+      padding: 40px;
       border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    body.dark .container {
-      background: #2f3640;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
     }
 
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
+      text-align: center;
+      margin-bottom: 30px;
     }
 
-    .dark-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      width: 40px;
-      height: 40px;
-      background: #fff;
-      border: none;
-      border-radius: 50%;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      transition: background 0.3s;
-    }
-
-    .dark-toggle:hover {
-      background: #f1f2f6;
-    }
-
-    .dark-toggle svg {
-      width: 18px;
-      height: 18px;
-      color: #333;
-    }
-
-    body.dark .dark-toggle {
-      background: #2f3640;
-    }
-
-    body.dark .dark-toggle svg {
-      color: #f1f2f6;
-    }
-
-    h2 {
+    .header h2 {
+      font-size: 28px;
       margin: 0;
-      font-size: 26px;
+      color: #2d3436;
     }
 
     #tripSummary {
@@ -91,10 +45,6 @@
       border-radius: 12px;
       margin-bottom: 25px;
       border-left: 5px solid #00cec9;
-    }
-
-    body.dark #tripSummary {
-      background-color: #353b48;
     }
 
     form label {
@@ -111,13 +61,6 @@
       border-radius: 10px;
       border: 1px solid #dcdde1;
       font-size: 15px;
-    }
-
-    body.dark input,
-    body.dark select {
-      background-color: #485460;
-      border: 1px solid #718093;
-      color: #f1f2f6;
     }
 
     button {
@@ -144,10 +87,6 @@
       animation: fadeIn 0.6s ease-in-out;
     }
 
-    body.dark .results {
-      background: #2d3436;
-    }
-
     .results p {
       font-size: 16px;
       margin: 8px 0;
@@ -171,10 +110,6 @@
       bottom: 10px;
       right: 10px;
       transform: scale(1.2);
-    }
-
-    body.dark .accommodation-item {
-      background: #3b3b98;
     }
 
     .accommodation-item a {
@@ -223,21 +158,12 @@
       border: 1px solid #dcdde1;
       font-size: 14px;
     }
-
-    body.dark .date-picker-container input {
-      background-color: #485460;
-      color: #f1f2f6;
-      border: 1px solid #718093;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h2><i data-lucide="wallet"></i> Trip Budget Estimator</h2>
-      <button class="dark-toggle" onclick="toggleDarkMode()">
-        <i data-lucide="moon" id="darkIcon"></i>
-      </button>
     </div>
 
     <div id="tripSummary"></div>
@@ -280,13 +206,6 @@
 
   <script>
     lucide.createIcons();
-
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark");
-      const icon = document.getElementById("darkIcon");
-      icon.setAttribute("data-lucide", document.body.classList.contains("dark") ? "sun" : "moon");
-      lucide.createIcons();
-    }
 
     function getQueryParams() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -390,21 +309,18 @@
     }
 
     function goToReviewPage() {
-  const selected = [];
-  document.querySelectorAll(".accommodation-checkbox:checked").forEach(checkbox => {
-    const parent = checkbox.closest(".accommodation-item");
-    const name = parent.querySelector("h4")?.textContent || "";
-    const address = parent.querySelector("p:nth-of-type(1)")?.textContent || "";
-    const price = parent.querySelector("p:nth-of-type(2)")?.textContent.replace("Price: ", "") || "";
-    const url = parent.querySelector("a")?.href || "";
+      const selected = [];
+      document.querySelectorAll(".accommodation-checkbox:checked").forEach(checkbox => {
+        const parent = checkbox.closest(".accommodation-item");
+        const name = parent.querySelector("h4")?.textContent || "";
+        const address = parent.querySelector("p:nth-of-type(1)")?.textContent || "";
+        const price = parent.querySelector("p:nth-of-type(2)")?.textContent || "";
+        selected.push({ name, address, price });
+      });
 
-    selected.push({ name, address, price, url });
-  });
-
-  localStorage.setItem("selectedAccommodations", JSON.stringify(selected));
-  window.location.href = "review.html";
-}
-
+      localStorage.setItem("selectedAccommodations", JSON.stringify(selected));
+      window.location.href = "review.html";
+    }
   </script>
 </body>
 </html>
