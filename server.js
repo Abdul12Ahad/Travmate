@@ -9,6 +9,8 @@ dotenv.config();
 
 const authRoutes = require('./routes/authroutes');
 const travelRoutes = require('./routes/travelRoutes');
+const tripRoutes = require('./routes/tripRoutes');
+
 
 const app = express();
 
@@ -20,6 +22,7 @@ if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/api/trips', tripRoutes);
 
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,

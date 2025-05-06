@@ -5,19 +5,18 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Helper to generate tokens
+// Helpers
 const generateAccessToken = (user) => {
-    return jwt.sign({ userId: user._id, name: user.fullName }, process.env.JWT_SECRET, {
-      expiresIn: '15m', // Access token expires in 15 minutes
-    });
-  };
-  
-  const generateRefreshToken = (user) => {
-    return jwt.sign({ userId: user._id }, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: '7d', // Refresh token expires in 7 days
-    });
-  };
-  
+  return jwt.sign({ userId: user._id, name: user.fullName }, process.env.JWT_SECRET, {
+    expiresIn: '15m',
+  });
+};
+
+const generateRefreshToken = (user) => {
+  return jwt.sign({ userId: user._id }, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: '7d',
+  });
+};
 
 // Register
 router.post('/register', async (req, res) => {
@@ -62,24 +61,24 @@ router.post('/login', async (req, res) => {
 
 // Refresh Token
 router.post('/refresh', (req, res) => {
-    const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(401).json({ error: 'Refresh token required' });
-  
-    try {
-      const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-  
-      const accessToken = jwt.sign(
-        { userId: decoded.userId },
-        process.env.JWT_SECRET,
-        { expiresIn: '15m' }
-      );
-  
-      res.json({ token: accessToken });
-    } catch (err) {
-      console.error('Refresh error:', err);
-      return res.status(403).json({ error: 'Invalid or expired refresh token' });
-    }
-  });
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(401).json({ error: 'Refresh token required' });
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    const accessToken = jwt.sign(
+      { userId: decoded.userId },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    res.json({ token: accessToken });
+  } catch (err) {
+    console.error('Refresh error:', err);
+    return res.status(403).json({ error: 'Invalid or expired refresh token' });
+  }
+});
 
 // Protected Route
 router.get('/me', authMiddleware, async (req, res) => {
